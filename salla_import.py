@@ -27,3 +27,12 @@ def root():
 @app.get("/import")
 async def import_products():
     return await fetch_products_from_salla()
+
+from fastapi import APIRouter
+
+router = APIRouter()
+
+@router.get("/import")
+async def import_products():
+    return await fetch_products_from_salla()
+
