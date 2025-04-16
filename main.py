@@ -4,6 +4,7 @@ from fastapi import FastAPI, APIRouter
 from dotenv import load_dotenv
 
 from salla_import import router as import_router
+app.include_router(import_router)
 from salla import router as webhook_router
 
 load_dotenv()
