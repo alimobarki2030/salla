@@ -18,11 +18,7 @@ async def get_access_token():
 
     async with httpx.AsyncClient() as client:
         response = await client.post(url, data=payload, headers=headers)
-
-        # طباعة الرسالة النصية من سلة لتشخيص الخطأ
         print("🔍 Salla response text:", response.text)
-
-        # إذا فشل الطلب، أظهر الخطأ
         response.raise_for_status()
-
         return response.json().get("access_token")
+
