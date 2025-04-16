@@ -1,20 +1,28 @@
-# ملف salla_auth.py
+import os
 import httpx
 
-CLIENT_ID = "b78e56f5-b7e9-4cc0-aa8b-f4ad0171ea6a"
-CLIENT_SECRET = "7baa9bc331f264ded27d5858ab3504cc"
-TOKEN_URL = "https://accounts.salla.sa/oauth2/token"
-
 async def get_access_token():
+    url = "https://accounts.salla.sa/oauth2/token"
+    client_id = os.getenv("SALLA_CLIENT_ID")
+    client_secret = os.getenv("SALLA_CLIENT_SECRET")
+
+    payload = {
+        "grant_type": "client_credentials",
+        "client_id": client_id,
+        "client_secret": client_secret
+    }
+
+    headers = {
+        "Content-Type": "application/x-www-form-urlencoded"
+    }
+
     async with httpx.AsyncClient() as client:
-        response = await client.post(
-            TOKEN_URL,
-            data={
-                "grant_type": "client_credentials",
-                "client_id": CLIENT_ID,
-                "client_secret": CLIENT_SECRET,
-            },
-            headers={"Content-Type": "application/x-www-form-urlencoded"},
-        )
+        response = await client.post(url, data=payload, headers=headers)
+
+        # طباعة الرسالة النصية من سلة لتشخيص الخطأ
+        print("🔍 Salla response text:", response.text)
+
+        # إذا فشل الطلب، أظهر الخطأ
         response.raise_for_status()
-        return response.json()["access_token"]
+
+        return response.json().get("access_token")
