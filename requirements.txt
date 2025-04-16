@@ -3,4 +3,6 @@ uvicorn
 sqlalchemy
 httpx
 python-dotenv
+requests
+
 
