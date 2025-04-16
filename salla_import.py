@@ -1,50 +1,29 @@
-from fastapi import APIRouter, Header, HTTPException, Depends
-import requests
-from sqlalchemy.orm import Session
-from database import get_db
-from models import Product
-from datetime import datetime
+import httpx
+from salla_auth import get_access_token
 
-router = APIRouter()
+API_URL = "https://api.salla.dev/admin/v2/products"
 
-@router.post("/salla/import-products")
-def import_products_from_salla(access_token: str = Header(...), db: Session = Depends(get_db)):
-    try:
-        url = "https://api.salla.dev/admin/v2/products"
-        headers = {
-            "Authorization": f"Bearer {access_token}",
-            "Accept": "application/json"
-        }
-        response = requests.get(url, headers=headers)
+async def fetch_products_from_salla():
+    token = await get_access_token()
+    async with httpx.AsyncClient() as client:
+        response = await client.get(
+            API_URL,
+            headers={"Authorization": f"Bearer {token}"}
+        )
+        response.raise_for_status()
+        return response.json()
 
-        if response.status_code != 200:
-            raise HTTPException(status_code=response.status_code, detail="فشل في جلب المنتجات من سلة")
 
-        products = response.json().get("data", [])
-        saved = 0
-        for p in products:
-            product_id = p.get("id")
-            existing = db.query(Product).filter(Product.id == product_id).first()
-            if existing:
-                continue
+# إضافة هذا في ملف main.py
+from fastapi import FastAPI
+from salla_import import fetch_products_from_salla
 
-            new_product = Product(
-                id=product_id,
-                keyword=p.get("name", ""),
-                title=p.get("name", ""),
-                description=p.get("description", ""),
-                seo_title=p.get("name", ""),
-                seo_url=p.get("slug", ""),
-                meta_description=p.get("short_description", ""),
-                status="pending",
-                created_at=datetime.utcnow()
-            )
+app = FastAPI()
 
-            db.add(new_product)
-            saved += 1
+@app.get("/")
+def root():
+    return {"message": "✅ API is running"}
 
-        db.commit()
-        return {"message": f"تم حفظ {saved} منتج جديد بنجاح"}
-
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"حدث خطأ أثناء الحفظ: {str(e)}")
+@app.get("/import")
+async def import_products():
+    return await fetch_products_from_salla()
