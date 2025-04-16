@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Header, HTTPException, Depends
 import requests
 from sqlalchemy.orm import Session
-from api.database import get_db
+from database import get_db
 from api.models import Product
 from datetime import datetime
 
